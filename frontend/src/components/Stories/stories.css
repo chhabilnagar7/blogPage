@@ -1,0 +1,51 @@
+.allStories{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 30px;
+}
+.text{
+
+    border: 1px solid #e7e7e7;
+    border-radius: 12px;
+    padding: 5px;
+    background-color: rgba(253, 209, 105, 1);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.stories{
+    /* border: 0.1px solid #ededed; */
+    margin: 0px 40px;
+    /* border-radius: 5px; */
+    padding: 20px;
+    /* box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); */
+}
+.storyData{
+    margin-top: 30px;
+    border: 1px solid #e7e7e7;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    padding: 8px;
+    border-radius: 5px;
+}
+.userName{
+    border: 1px solid white;
+    border-radius: 5px;
+    background-color: antiquewhite;
+    padding: 5px;
+}
+.storyTime{
+    
+    border: 1px solid white;
+    border-radius: 5px;
+    background-color: antiquewhite;
+    padding: 5px;
+    justify-content: end;
+    margin-left: 5px;
+}
+.storyContent{
+    border: 1px solid #e7e7e7;
+    background-color: #e7e7e7;
+    margin-top: 5px;
+    padding: 10px;
+    border-radius: 8px;
+}
