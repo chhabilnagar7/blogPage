@@ -1,3 +1,4 @@
+
 .allStories{
     display: flex;
     flex-direction: column;
@@ -12,6 +13,7 @@
     background-color: rgba(253, 209, 105, 1);
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
+
 
 .stories{
     /* border: 0.1px solid #ededed; */

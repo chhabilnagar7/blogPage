@@ -1,15 +1,29 @@
-
-
-.content{
-  background-color: antiquewhite;
-  
-  align-items: center;
+.backgroundLandingPage{
+  background-image: url('../../assests/bgImage.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  /* flex-direction: column; */
   justify-content: center;
-  margin-top: 150px;
-  border: 1px solid black;
+  align-items: center;
+  
+}
+
+.contentLanding{
+  /* background-image: url('../../assests/bgImage.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: rgb(220, 215, 203); */
+  /* margin-top: 30px; */
+  /* border: 1px solid rgb(133, 133, 133); */
+  border-radius: 10px;
   width: 500px;
-  margin-left: 676px;
-  height: 500px;
+  color: white;
+  height: 300px;
 }
 
 .welcome{
@@ -25,4 +39,84 @@
   align-items: center;
   margin-top: 50px;
   gap: 20px;
+}
+
+
+/* large screens */
+@media (min-width: 1200px) {
+  .contentLanding {
+    width: 600px;
+    height: 350px;
+  }
+  .buttons {
+    gap: 30px;
+  }
+}
+
+/* for laptops */
+@media (min-width: 900px) and (max-width: 1200px) {
+  .contentLanding {
+    width: 550px;
+    height: 320px;
+  }
+  .buttons {
+    gap: 25px;
+  }
+}
+
+/*for tablets */
+@media (min-width: 768px) and (max-width: 900px) {
+  .backgroundLandingPage {
+    flex-direction: column;
+  }
+  .contentLanding {
+    width: 450px;
+    height: auto;
+    padding: 15px;
+  }
+  .welcome {
+    margin-top: 30px;
+  }
+  .buttons {
+    margin-top: 30px;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+}
+
+/* phones */
+@media (max-width: 767px) {
+  .backgroundLandingPage {
+    padding: 10px;
+    flex-direction: column;
+  }
+  .welcome h2 {
+    font-size: 16px;
+    text-align: center;
+  }
+  .buttons {
+    margin-top: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+}
+
+ /* small screen */
+@media (max-width:480px) {
+  .contentLanding {
+    width: 100%;
+  }
+  .welcome h2 {
+    font-size:16px;
+  }
+  .buttons {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+
+.errorMsg{
+  color: red;
+  font-size: 12px;
+  margin-top: 2px;
 }

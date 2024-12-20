@@ -1,33 +1,112 @@
-import {React , useState} from "react";
+import {React , useEffect, useState} from "react";
 import './stories.css'
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+
+
 const StoriesPage = () => {
     const[tabType , setTabType] = useState(1); 
+    const[latestStories,setLatestStories]= useState([]);
+    const [userStories,setUserStories]=useState([]);
+    const[storyContent,setStoryContent]=useState('')
+    const[storyTitle,setStoryTitle]=useState('')
 
+    const navigate = useNavigate()
+
+
+    const fetchAllStories = async () =>{
+      try {
+        const response = await axios.get('http://localhost:5000/api/stories'); 
+        setLatestStories(response.data); 
+        toast.success("Latest Stories")
+      } catch (error) {
+        toast.error(error || "Error during fetching stories data")
+        console.error('Error', error);
+      }
+    };
+    useEffect(() => {
+    
+  
+      fetchAllStories();
+    },[])
+    const userEmail = localStorage.getItem('userEmail')
+    console.log("userEmail",userEmail)
+    const userStory = async () => {
+      try {
+          
+          const response = await axios.get(`http://localhost:5000/api/stories/user?email=${userEmail}`);
+          setUserStories(response.data)
+          toast.success("Your Stories")
+      } catch (error) {
+        toast.error(error,"Error")
+          console.error('Error', error);
+      }
+  };
+  
     const handleAllStories=()=>{
         setTabType(1);
     }
     const handleYourStories =()=>{
         setTabType(2);
     }
+    const handleLogout = async (e) => {
+      e.preventDefault();
+     await axios.post("http://localhost:5000/api/auth/logout")
+        .then((res) => {
+          const message = res.data.message;
+          console.log("message", message);
+          localStorage.removeItem("token");
+          localStorage.removeItem('userName');
+          localStorage.removeItem('userEmail');
+          navigate('/');
+          
+        })
+        .catch((error) => {
+          console.log("Error", error)
+        })
+    }
 
-
+    const handleAddStory = async (e) => {
+      e.preventDefault();
+      try {
+        const userName = localStorage.getItem('userName');
+        const userEmail = localStorage.getItem('userEmail')
+        const response = await axios.post('http://localhost:5000/api/newStories', {
+          title: storyTitle, 
+          content: storyContent,
+          userName: userName,
+          userEmail: userEmail,
+        });
+  
+       
+        console.log('New Story', response.data);
+        fetchAllStories();
+  
+  
+      } catch (error) {
+        console.error('Error', error);
+      }
+    }
+    
+  
   return (
     <div>
       <div className="contentStories">
         {/* Navbar */}
         <nav class="navbar navbar-light bg-light">
           <div class="container-fluid">
-                <h2>Hi! Chhabil</h2>
+                <h2>Hi! {localStorage.getItem('userName')}</h2>
                 <form class="d-flex">
                 <button class="btn btn-outline-success me-2" type="button" onClick={handleAllStories}>
                 Latest Stories
               </button> 
 
-              <button class="btn btn-outline-success me-2" type="button" onClick={handleYourStories}>
+              <button class="btn btn-outline-success me-2" type="button"onClick={() =>{handleYourStories();userStory();}}>
                 Your Stories
               </button>
                             
-                <button type="button" class="btn btn-outline-success me-2"              data-bs-toggle="modal" data-bs-target="#storyModal">
+                <button type="button" class="btn btn-outline-success me-2" data-bs-toggle="modal" data-bs-target="#storyModal">
                 Create Story
                 </button>
                 <div
@@ -52,6 +131,20 @@ const StoriesPage = () => {
                   </div>
                   <div className="modal-body">
                     <form>
+                    <div className="mb-3">
+                        <label htmlFor="storyText" className="form-label">
+                         Title
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Enter your story"
+                          className="form-control"
+                          id="storyText"
+                          value={storyTitle}
+                          onChange={(e) =>setStoryTitle(e.target.value)}
+                          aria-describedby="emailHelp"
+                        />
+                      </div>
                       <div className="mb-3">
                         <label htmlFor="storyText" className="form-label">
                          Your Story Content
@@ -61,17 +154,19 @@ const StoriesPage = () => {
                           placeholder="Enter your story"
                           className="form-control"
                           id="storyText"
-                        //   aria-describedby="emailHelp"
+                          value={storyContent}
+                          onChange={(e) => setStoryContent(e.target.value)}
+                          aria-describedby="emailHelp"
                         />
                       </div>
-                      <button type="submit" className="btn btn-primary">
+                      <button type="submit" className="btn btn-primary" data-bs-dismiss="modal" onClick={handleAddStory}>
                        Add Story
                       </button>
                     </form>
                   </div>
                 </div>
               </div>
-            </div>
+                </div>
                 
               <div className="logout">
                 <button
@@ -79,13 +174,13 @@ const StoriesPage = () => {
                   type="button"
                   className="btn btn-primary"
                   data-bs-toggle="modal"
-                  data-bs-target="#loginModal"
+                  data-bs-target="#logoutModal"
                 >
                   <i class="fa-solid fa-right-from-bracket"></i>
                 </button>
                 <div
                   className="modal fade"
-                  id="loginModal"
+                  id="logoutModal"
                   tabIndex="-1"
                   aria-labelledby="logoutModalLabel"
                   aria-hidden="true"
@@ -104,7 +199,7 @@ const StoriesPage = () => {
                         ></button>
                       </div>
                       <div className="modal-body">Do you want to sign out?</div>
-                      <button type="submit" className="btn btn-primary">
+                      <button type="submit" className="btn btn-primary" data-bs-dismiss="modal" onClick={handleLogout}>
                         Sign Out
                       </button>
                     </div>
@@ -119,109 +214,54 @@ const StoriesPage = () => {
         </nav>
         
         {/* All stories */}
+
         {tabType === 1 && (
-            <div className="allStories">
-            <div className="text">
-                <h2>Latest stories</h2>
-            </div>
-            <div className="stories">
-
-            <div className="storyData">
-                <div className="storyTitle">
-                    <h3>ABCDEFGH</h3>
+        <div className="allStories">
+          <div className="text">
+            <h2>Latest stories</h2>
+          </div>
+          <div className="stories">
+            {latestStories.length > 0 ? (
+              latestStories.map((story, index) => (
+                <div className="storyData" key={index}>
+                  <div className="storyTitle">
+                    <h3>{story.title}</h3>
+                  </div>
+                  <p className="storyContent">{story.content}</p>
+                  <span className="userName">Created by: {story.userName}</span>
+                  <span className="storyTime">{story.createdAt}</span>
                 </div>
-                <p className="storyContent">Lorem, ipsum dolor sit amet consectetur adipisicing elit. Culpa esse iste veritatis, est error quasi accusamus voluptate doloremque a hic ratione officia ipsum in laborum atque, pariatur dolorem velit alias iusto ex minima voluptates soluta odit minus? Libero mollitia nemo repudiandae, tempore fugit natus similique eum iusto voluptatem eos adipisci voluptas eius ab porro possimus officiis quia eveniet tempora neque laboriosam voluptate dicta? Obcaecati voluptatum laudantium ea excepturi consectetur aut aliquam perspiciatis sint deleniti inventore dolores hic, quaerat ratione dignissimos nam corrupti neque doloremque dolor voluptates, nobis aspernatur ipsum. Excepturi rerum voluptas est facilis rem aliquam, qui consectetur temporibus corporis, illum ea reprehenderit hic maiores? Asperiores sint commodi laboriosam pariatur non ab doloremque natus incidunt labore soluta, consequuntur laborum qui velit voluptatem aspernatur fuga excepturi, nulla voluptatum perferendis vero debitis, earum quis? Quae sed exercitationem harum? Id ex eveniet ducimus molestias architecto possimus quam illum ut delectus voluptas totam ipsam similique, rerum mollitia error, corporis beatae enim? Magni consectetur, quae doloribus nobis, ducimus voluptate necessitatibus ipsam reprehenderit ex nihil modi eos, ad unde! Dolorem non corporis ipsum exercitationem fugit accusantium dolores nesciunt saepe id illo debitis, quaerat illum accusamus consequatur laboriosam, repellat delectus possimus tempora. Similique provident sit inventore cumque.
-                </p>
-                <span className="userName">Created by: Chhabil Nagar</span>
-                <span className="storyTime">24 June 2024</span>
-            </div>
-
-            <div className="storyData">
-                <div className="storyTitle">
-                    <h3>ABCDEFGH</h3>
-                </div>
-                <p className="storyContent">Lorem, ipsum dolor sit amet consectetur adipisicing elit. Culpa esse iste veritatis, est error quasi accusamus voluptate doloremque a hic ratione officia ipsum in laborum atque, pariatur dolorem velit alias iusto ex minima voluptates soluta odit minus? Libero mollitia nemo repudiandae, tempore fugit natus similique eum iusto voluptatem eos adipisci voluptas eius ab porro possimus officiis quia eveniet tempora neque laboriosam voluptate dicta? Obcaecati voluptatum laudantium ea excepturi consectetur aut aliquam perspiciatis sint deleniti inventore dolores hic, quaerat ratione dignissimos nam corrupti neque doloremque dolor voluptates, nobis aspernatur ipsum. Excepturi rerum voluptas est facilis rem aliquam, qui consectetur temporibus corporis, illum ea reprehenderit hic maiores? Asperiores sint commodi laboriosam pariatur non ab doloremque natus incidunt labore soluta, consequuntur laborum qui velit voluptatem aspernatur fuga excepturi, nulla voluptatum perferendis vero debitis, earum quis? Quae sed exercitationem harum? Id ex eveniet ducimus molestias architecto possimus quam illum ut delectus voluptas totam ipsam similique, rerum mollitia error, corporis beatae enim? Magni consectetur, quae doloribus nobis, ducimus voluptate necessitatibus ipsam reprehenderit ex nihil modi eos, ad unde! Dolorem non corporis ipsum exercitationem fugit accusantium dolores nesciunt saepe id illo debitis, quaerat illum accusamus consequatur laboriosam, repellat delectus possimus tempora. Similique provident sit inventore cumque.
-                </p>
-                <span className="userName">Created by: Chhabil Nagar</span>
-                <span className="storyTime">24 June 2024</span>
-            </div>
-
-            <div className="storyData">
-                <div className="storyTitle">
-                    <h3>ABCDEFGH</h3>
-                </div>
-                <p className="storyContent">Lorem, ipsum dolor sit amet consectetur adipisicing elit. Culpa esse iste veritatis, est error quasi accusamus voluptate doloremque a hic ratione officia ipsum in laborum atque, pariatur dolorem velit alias iusto ex minima voluptates soluta odit minus? Libero mollitia nemo repudiandae, tempore fugit natus similique eum iusto voluptatem eos adipisci voluptas eius ab porro possimus officiis quia eveniet tempora neque laboriosam voluptate dicta? Obcaecati voluptatum laudantium ea excepturi consectetur aut aliquam perspiciatis sint deleniti inventore dolores hic, quaerat ratione dignissimos nam corrupti neque doloremque dolor voluptates, nobis aspernatur ipsum. Excepturi rerum voluptas est facilis rem aliquam, qui consectetur temporibus corporis, illum ea reprehenderit hic maiores? Asperiores sint commodi laboriosam pariatur non ab doloremque natus incidunt labore soluta, consequuntur laborum qui velit voluptatem aspernatur fuga excepturi, nulla voluptatum perferendis vero debitis, earum quis? Quae sed exercitationem harum? Id ex eveniet ducimus molestias architecto possimus quam illum ut delectus voluptas totam ipsam similique, rerum mollitia error, corporis beatae enim? Magni consectetur, quae doloribus nobis, ducimus voluptate necessitatibus ipsam reprehenderit ex nihil modi eos, ad unde! Dolorem non corporis ipsum exercitationem fugit accusantium dolores nesciunt saepe id illo debitis, quaerat illum accusamus consequatur laboriosam, repellat delectus possimus tempora. Similique provident sit inventore cumque.
-                </p>
-                <span className="userName">Created by: Chhabil Nagar</span>
-                <span className="storyTime">24 June 2024</span>
-            </div>
-
-            <div className="storyData">
-                <div className="storyTitle">
-                    <h3>ABCDEFGH</h3>
-                </div>
-                <p className="storyContent">Lorem, ipsum dolor sit amet consectetur adipisicing elit. Culpa esse iste veritatis, est error quasi accusamus voluptate doloremque a hic ratione officia ipsum in laborum atque, pariatur dolorem velit alias iusto ex minima voluptates soluta odit minus? Libero mollitia nemo repudiandae, tempore fugit natus similique eum iusto voluptatem eos adipisci voluptas eius ab porro possimus officiis quia eveniet tempora neque laboriosam voluptate dicta? Obcaecati voluptatum laudantium ea excepturi consectetur aut aliquam perspiciatis sint deleniti inventore dolores hic, quaerat ratione dignissimos nam corrupti neque doloremque dolor voluptates, nobis aspernatur ipsum. Excepturi rerum voluptas est facilis rem aliquam, qui consectetur temporibus corporis, illum ea reprehenderit hic maiores? Asperiores sint commodi laboriosam pariatur non ab doloremque natus incidunt labore soluta, consequuntur laborum qui velit voluptatem aspernatur fuga excepturi, nulla voluptatum perferendis vero debitis, earum quis? Quae sed exercitationem harum? Id ex eveniet ducimus molestias architecto possimus quam illum ut delectus voluptas totam ipsam similique, rerum mollitia error, corporis beatae enim? Magni consectetur, quae doloribus nobis, ducimus voluptate necessitatibus ipsam reprehenderit ex nihil modi eos, ad unde! Dolorem non corporis ipsum exercitationem fugit accusantium dolores nesciunt saepe id illo debitis, quaerat illum accusamus consequatur laboriosam, repellat delectus possimus tempora. Similique provident sit inventore cumque.
-                </p>
-                <span className="userName">Created by: Chhabil Nagar</span>
-                <span className="storyTime">24 June 2024</span>
-            </div>
-
-            <div className="storyData">
-                <div className="storyTitle">
-                    <h3>ABCDEFGH</h3>
-                </div>
-                <p className="storyContent">Lorem, ipsum dolor sit amet consectetur adipisicing elit. Culpa esse iste veritatis, est error quasi accusamus voluptate doloremque a hic ratione officia ipsum in laborum atque, pariatur dolorem velit alias iusto ex minima voluptates soluta odit minus? Libero mollitia nemo repudiandae, tempore fugit natus similique eum iusto voluptatem eos adipisci voluptas eius ab porro possimus officiis quia eveniet tempora neque laboriosam voluptate dicta? Obcaecati voluptatum laudantium ea excepturi consectetur aut aliquam perspiciatis sint deleniti inventore dolores hic, quaerat ratione dignissimos nam corrupti neque doloremque dolor voluptates, nobis aspernatur ipsum. Excepturi rerum voluptas est facilis rem aliquam, qui consectetur temporibus corporis, illum ea reprehenderit hic maiores? Asperiores sint commodi laboriosam pariatur non ab doloremque natus incidunt labore soluta, consequuntur laborum qui velit voluptatem aspernatur fuga excepturi, nulla voluptatum perferendis vero debitis, earum quis? Quae sed exercitationem harum? Id ex eveniet ducimus molestias architecto possimus quam illum ut delectus voluptas totam ipsam similique, rerum mollitia error, corporis beatae enim? Magni consectetur, quae doloribus nobis, ducimus voluptate necessitatibus ipsam reprehenderit ex nihil modi eos, ad unde! Dolorem non corporis ipsum exercitationem fugit accusantium dolores nesciunt saepe id illo debitis, quaerat illum accusamus consequatur laboriosam, repellat delectus possimus tempora. Similique provident sit inventore cumque.
-                </p>
-                <span className="userName">Created by: Chhabil Nagar</span>
-                <span className="storyTime">24 June 2024</span>
-            </div>
-
+              ))
+            ) : (
+              <p>No stories available</p>
+            )}
+          </div>
         </div>
-        </div>
-        )}
-
-        {tabType === 2 && (
-            <div className="allStories">
-            <div className="text">
-                <h3>Your stories</h3>
-            </div>
-            <div className="stories">
-
-            <div className="storyData">
-                <div className="storyTitle">
-                    <h3>XYZ</h3>
+      )}
+      
+      {tabType === 2 && (
+        <div className="allStories">
+          <div className="text">
+            <h2>Your stories</h2>
+          </div>
+          <div className="stories">
+            {userStories?.length > 0 ? (
+              userStories?.map((story, index) => (
+                <div className="storyData" key={index}>
+                  <div className="storyTitle">
+                    <h3>{story.title}</h3>
+                  </div>
+                  <p className="storyContent">{story.content}</p>
+                  <span className="userName">Created by: {story.userName}</span>
+                  <span className="storyTime">{story.createdAt}</span>
                 </div>
-                <p className="storyContent">Lorem, ipsum dolor sit amet consectetur adipisicing elit. Culpa esse iste veritatis, est error quasi accusamus voluptate doloremque a hic ratione officia ipsum in laborum atque, pariatur dolorem velit alias iusto ex minima voluptates soluta odit minus? Libero mollitia nemo repudiandae, tempore fugit natus similique eum iusto voluptatem eos adipisci voluptas eius ab porro possimus officiis quia eveniet tempora neque laboriosam voluptate dicta? Obcaecati voluptatum laudantium ea excepturi consectetur aut aliquam perspiciatis sint deleniti inventore dolores hic, quaerat ratione dignissimos nam corrupti neque doloremque dolor voluptates, nobis aspernatur ipsum. Excepturi rerum voluptas est facilis rem aliquam, qui consectetur temporibus corporis, illum ea reprehenderit hic maiores? Asperiores sint commodi laboriosam pariatur non ab doloremque natus incidunt labore soluta, consequuntur laborum qui velit voluptatem aspernatur fuga excepturi, nulla voluptatum perferendis vero debitis, earum quis? Quae sed exercitationem harum? Id ex eveniet ducimus molestias architecto possimus quam illum ut delectus voluptas totam ipsam similique, rerum mollitia error, corporis beatae enim? Magni consectetur, quae doloribus nobis, ducimus voluptate necessitatibus ipsam reprehenderit ex nihil modi eos, ad unde! Dolorem non corporis ipsum exercitationem fugit accusantium dolores nesciunt saepe id illo debitis, quaerat illum accusamus consequatur laboriosam, repellat delectus possimus tempora. Similique provident sit inventore cumque.
-                </p>
-                <span className="userName">Created by: Chhabil Nagar</span>
-                <span className="storyTime">24 June 2024</span>
-            </div>
-
-            <div className="storyData">
-                <div className="storyTitle">
-                    <h3>ABCDEFGH</h3>
-                </div>
-                <p className="storyContent">Lorem, ipsum dolor sit amet consectetur adipisicing elit. Culpa esse iste veritatis, est error quasi accusamus voluptate doloremque a hic ratione officia ipsum in laborum atque, pariatur dolorem velit alias iusto ex minima voluptates soluta odit minus? Libero mollitia nemo repudiandae, tempore fugit natus similique eum iusto voluptatem eos adipisci voluptas eius ab porro possimus officiis quia eveniet tempora neque laboriosam voluptate dicta? Obcaecati voluptatum laudantium ea excepturi consectetur aut aliquam perspiciatis sint deleniti inventore dolores hic, quaerat ratione dignissimos nam corrupti neque doloremque dolor voluptates, nobis aspernatur ipsum. Excepturi rerum voluptas est facilis rem aliquam, qui consectetur temporibus corporis, illum ea reprehenderit hic maiores? Asperiores sint commodi laboriosam pariatur non ab doloremque natus incidunt labore soluta, consequuntur laborum qui velit voluptatem aspernatur fuga excepturi, nulla voluptatum perferendis vero debitis, earum quis? Quae sed exercitationem harum? Id ex eveniet ducimus molestias architecto possimus quam illum ut delectus voluptas totam ipsam similique, rerum mollitia error, corporis beatae enim? Magni consectetur, quae doloribus nobis, ducimus voluptate necessitatibus ipsam reprehenderit ex nihil modi eos, ad unde! Dolorem non corporis ipsum exercitationem fugit accusantium dolores nesciunt saepe id illo debitis, quaerat illum accusamus consequatur laboriosam, repellat delectus possimus tempora. Similique provident sit inventore cumque.
-                </p>
-                <span className="userName">Created by: Chhabil Nagar</span>
-                <span className="storyTime">24 June 2024</span>
-            </div>
-
-            <div className="storyData">
-                <div className="storyTitle">
-                    <h3>ABCDEFGH</h3>
-                </div>
-                <p className="storyContent">Lorem, ipsum dolor sit amet consectetur adipisicing elit. Culpa esse iste veritatis, est error quasi accusamus voluptate doloremque a hic ratione officia ipsum in laborum atque, pariatur dolorem velit alias iusto ex minima voluptates soluta odit minus? Libero mollitia nemo repudiandae, tempore fugit natus similique eum iusto voluptatem eos adipisci voluptas eius ab porro possimus officiis quia eveniet tempora neque laboriosam voluptate dicta? Obcaecati voluptatum laudantium ea excepturi consectetur aut aliquam perspiciatis sint deleniti inventore dolores hic, quaerat ratione dignissimos nam corrupti neque doloremque dolor voluptates, nobis aspernatur ipsum. Excepturi rerum voluptas est facilis rem aliquam, qui consectetur temporibus corporis, illum ea reprehenderit hic maiores? Asperiores sint commodi laboriosam pariatur non ab doloremque natus incidunt labore soluta, consequuntur laborum qui velit voluptatem aspernatur fuga excepturi, nulla voluptatum perferendis vero debitis, earum quis? Quae sed exercitationem harum? Id ex eveniet ducimus molestias architecto possimus quam illum ut delectus voluptas totam ipsam similique, rerum mollitia error, corporis beatae enim? Magni consectetur, quae doloribus nobis, ducimus voluptate necessitatibus ipsam reprehenderit ex nihil modi eos, ad unde! Dolorem non corporis ipsum exercitationem fugit accusantium dolores nesciunt saepe id illo debitis, quaerat illum accusamus consequatur laboriosam, repellat delectus possimus tempora. Similique provident sit inventore cumque.
-                </p>
-                <span className="userName">Created by: Chhabil Nagar</span>
-                <span className="storyTime">24 June 2024</span>
-            </div>
-
-           
-
+              ))
+            ) : (
+              <p>No stories available</p>
+            )}
+          </div>
         </div>
-        </div>
-        )}
+      )}
       </div>
     </div>
   );
